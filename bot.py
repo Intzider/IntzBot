@@ -1,6 +1,6 @@
 import os
 
-from discord import FFmpegPCMAudio, Intents, utils, CategoryChannel
+from discord import FFmpegPCMAudio, Intents, utils
 from discord.ext import commands
 
 from dotenv import load_dotenv
@@ -9,7 +9,7 @@ load_dotenv()
 TOKEN = os.getenv('TOKEN')
 stream_url = "https://c2.hostingcentar.com/streams/radio101rock/"
 
-bot = commands.Bot(intents=Intents().all(), command_prefix='!')
+bot = commands.Bot(intents=Intents().all(), command_prefix='/')
 
 
 @bot.event
@@ -41,9 +41,24 @@ async def play(ctx):
     voice.play(FFmpegPCMAudio(stream_url))
 
 
+@bot.command(name="pause")
+async def pause(ctx):
+    if 'voice' in globals():
+        if voice.is_playing():
+            voice.pause()
+        else:
+            voice.resume()
+
+
+@bot.command(name="resume")
+async def resume(ctx):
+    await pause(ctx)
+
+
 @bot.command(name="stop")
 async def stop(ctx):
-    voice.stop()
+    if 'voice' in globals():
+        voice.stop()
     await disconnect(ctx)
 
 
