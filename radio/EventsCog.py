@@ -2,7 +2,7 @@ from discord import utils
 from discord.ext import commands
 
 
-class Events(commands.Cog):
+class EventsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -26,5 +26,14 @@ class Events(commands.Cog):
             if self.bot.voice is not None:
                 self.bot.voice.stop()
                 self.bot.voice = None
-                self.bot.current_station = None
+                self.bot.station = None
             await voice_state.disconnect()
+            voice_state.cleanup()
+
+    @commands.Cog.listener()
+    async def on_error(self, event, *args, **kwargs):
+        print(event)
+
+
+async def setup(bot):
+    await bot.add_cog(EventsCog(bot))
