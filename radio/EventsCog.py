@@ -24,10 +24,6 @@ class EventsCog(commands.Cog):
             return
 
         if len(voice_state.channel.members) == 1:
-            if self.bot.voice is not None:
-                self.bot.voice.stop()
-                self.bot.voice = None
-                self.bot.station = None
             await voice_state.disconnect()
             voice_state.cleanup()
 

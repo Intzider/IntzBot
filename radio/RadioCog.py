@@ -19,82 +19,78 @@ class RadioCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.bot.streams = get_streams()
-        self.bot.voice = None
-        self.bot.station = None
 
-    async def is_in_channel(self, ctx):
+    async def get_user_channel(self, ctx):
         if ctx.author.voice is None:
             await ctx.send("You're not in a voice channel")
-            self.bot.station = None
-            return False
+            return None
         if ctx.author.voice.channel is None:
             await ctx.send("You're not in a voice channel")
-            self.bot.station = None
-            return False
-        return True
+            return None
+        return ctx.author.voice.channel
 
-    async def is_valid_station(self, ctx, args):
+    async def verify_station(self, ctx, args):
         if len(args) != 1:
             message = "Missing radio station argument:\n"
             message += "\n".join(
                 [f"    {os.getenv('PREFIX')}play {x}" for x, v in self.bot.streams.items()])
             await ctx.send(message)
-            return False
+            return None
 
-        if self.bot.streams.get(args[0], "") == self.bot.station:
-            await ctx.send("This is already playing")
-            return False
-        else:
-            self.bot.station = self.bot.streams.get(args[0], None)
+        if ctx.guild.voice_client is not None:
+            if self.bot.streams.get(args[0], "") == ctx.guild.voice_client.endpoint:
+                await ctx.send("This is already playing")
+                return None
 
-        if self.bot.station is None:
+        station = self.bot.streams.get(args[0], None)
+        if station is None:
             await ctx.send("You mistyped, I ain't playin nuffin")
-            return False
+            return None
 
-        return True
+        return station
 
     @commands.command(name="play")
     async def play(self, ctx, *args):
         def play_audio(err=None):
             if err is not None:
                 print(err)
-            if self.bot.voice is None:
+            if not voice.is_connected():
                 return
-            self.bot.voice.play(FFmpegOpusAudio(self.bot.station, options="-filter:a volume=0.2 -y"),
-                                after=lambda e: play_audio(e))
+            source = FFmpegOpusAudio(change, options="-filter:a volume=0.2 -y")
+            voice.play(source, after=lambda e: play_audio(e))
 
-        change = await self.is_valid_station(ctx, args)
+        voice_channel = await self.get_user_channel(ctx)
+        voice = ctx.guild.voice_client
+        change = await self.verify_station(ctx, args)
 
-        if await self.is_in_channel(ctx) and change:
-            if self.bot.voice is not None and not change:
-                return
-            elif self.bot.voice is not None:
-                await self.bot.voice.disconnect(force=False)
+        if voice_channel is not None and change is not None:
+            if voice is not None:
+                if change is not None:
+                    voice.pause()
+                else:
+                    return
 
-            voice_channel = ctx.author.voice.channel
-            self.bot.voice = ctx.channel.guild.voice_client
-            if self.bot.voice is None:
-                self.bot.voice = await voice_channel.connect()
-            elif self.bot.voice.channel != voice_channel:
-                self.bot.voice.move_to(voice_channel)
+            if voice is None:
+                voice = await voice_channel.connect()
+            elif voice.channel != voice_channel:
+                voice.move_to(voice_channel)
             play_audio()
 
     @commands.command(name="pause")
     async def pause(self, ctx):
-        if self.bot.voice.is_playing():
-            self.bot.voice.pause()
-        else:
-            self.bot.voice.resume()
+        voice = ctx.guild.voice_client
+        if voice is not None:
+            voice.pause() if voice.is_playing() else voice.resume()
 
     @commands.command(name="resume")
     async def resume(self, ctx):
         await self.pause(ctx)
 
     @commands.command(name="stop")
-    async def stop(self, ctx, change=False):
-        if self.bot.voice is not None:
-            self.bot.voice.stop()
-        if not change:
+    async def stop(self, ctx):
+        voice = ctx.guild.voice_client
+        if voice is not None:
+            voice.stop()
             await self.disconnect(ctx)
 
     @commands.command(name="dc")
@@ -105,14 +101,6 @@ class RadioCog(commands.Cog):
 
         await voice_state.disconnect()
         voice_state.cleanup()
-        self.bot.voice = None
-        self.bot.station = None
-
-    @commands.is_owner()
-    @commands.command(name="reload_streams")
-    async def reload_streams(self, ctx):
-        self.bot.streams = get_streams()
-        await ctx.send(f"Streams reloaded, I now have {len(self.bot.streams)} streams")
 
     @commands.is_owner()
     @commands.command(name="add_stream")
@@ -121,6 +109,21 @@ class RadioCog(commands.Cog):
             return
         self.bot.streams[args[0]] = args[1]
         add_streams(self.bot.streams)
+        await ctx.send(f"Added {args[0]} to streams")
+        await self.play(ctx)
+
+    @commands.is_owner()
+    @commands.command(name="delete_stream")
+    async def add_stream(self, ctx, *args):
+        if len(args) != 1:
+            return
+        if self.bot.streams.get(args[0], None) is None:
+            ctx.send("No such entry")
+            return
+        del self.bot.streams[args[0]]
+        add_streams(self.bot.streams)
+        await ctx.send(f"Removed {args[0]} from streams")
+        await self.play(ctx)
 
 
 async def setup(bot):
