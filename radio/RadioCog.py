@@ -10,6 +10,11 @@ def get_streams() -> dict:
         return json.load(file)
 
 
+def add_streams(data: dict):
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "streams.json"), "w+") as file:
+        file.write(json.dumps(data, indent=4))
+
+
 class RadioCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -32,7 +37,7 @@ class RadioCog(commands.Cog):
         if len(args) != 1:
             message = "Missing radio station argument:\n"
             message += "\n".join(
-                [f"    {os.getenv('PREFIX')}play {x}" for x, v in self.bot.streams.items() if v != self.bot.station])
+                [f"    {os.getenv('PREFIX')}play {x}" for x, v in self.bot.streams.items()])
             await ctx.send(message)
             return False
 
@@ -55,7 +60,7 @@ class RadioCog(commands.Cog):
                 print(err)
             if self.bot.voice is None:
                 return
-            self.bot.voice.play(FFmpegOpusAudio(self.bot.station, options="-filter:a volume=0.2"),
+            self.bot.voice.play(FFmpegOpusAudio(self.bot.station, options="-filter:a volume=0.2 -y"),
                                 after=lambda e: play_audio(e))
 
         change = await self.is_valid_station(ctx, args)
@@ -76,11 +81,10 @@ class RadioCog(commands.Cog):
 
     @commands.command(name="pause")
     async def pause(self, ctx):
-        if 'voice' in globals():
-            if self.bot.voice.is_playing():
-                self.bot.voice.pause()
-            else:
-                self.bot.voice.resume()
+        if self.bot.voice.is_playing():
+            self.bot.voice.pause()
+        else:
+            self.bot.voice.resume()
 
     @commands.command(name="resume")
     async def resume(self, ctx):
@@ -104,10 +108,19 @@ class RadioCog(commands.Cog):
         self.bot.voice = None
         self.bot.station = None
 
+    @commands.is_owner()
     @commands.command(name="reload_streams")
     async def reload_streams(self, ctx):
         self.bot.streams = get_streams()
         await ctx.send(f"Streams reloaded, I now have {len(self.bot.streams)} streams")
+
+    @commands.is_owner()
+    @commands.command(name="add_stream")
+    async def add_stream(self, ctx, *args):
+        if len(args) != 2:
+            return
+        self.bot.streams[args[0]] = args[1]
+        add_streams(self.bot.streams)
 
 
 async def setup(bot):

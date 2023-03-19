@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-bot = commands.Bot(intents=Intents().all(), command_prefix=os.getenv('PREFIX'))
+bot = commands.Bot(intents=Intents().all(), owner_id=270319757167689728, command_prefix=os.getenv('PREFIX'))
 
 
 async def load_cogs():
