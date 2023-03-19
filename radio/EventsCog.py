@@ -1,6 +1,10 @@
-import discord
-from discord import utils
+import logging
+
 from discord.ext import commands
+from discord.ext.commands import CommandNotFound
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.ERROR)
 
 
 class EventsCog(commands.Cog):
@@ -9,13 +13,7 @@ class EventsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Music Bot Ready')
-
-    @commands.Cog.listener()
-    async def on_guild_available(self, guild):
-        channel = utils.getchannel = utils.get(guild.text_channels, name='bot-channel')
-        if channel is None:
-            await guild.create_text_channel('bot-channel')
+        logger.info('Music Bot Ready')
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -29,7 +27,15 @@ class EventsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_error(self, event, *args, **kwargs):
-        print(event)
+        logger.error(event)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, CommandNotFound):
+            logger.error("CommandNotFound")
+            return
+        logger.error("CommandNotFound - not instance")
+        raise error
 
 
 async def setup(bot):

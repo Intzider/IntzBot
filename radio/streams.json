@@ -3,5 +3,8 @@
   "radio101rock": "https://c2.hostingcentar.com/streams/radio101rock/",
   "laganini": "http://194.145.208.251:8000/start",
   "top": "https://c5.hostingcentar.com/streams/topradio/",
-  "otvoreni": "https://stream2.otvoreni.hr/otvoreni"
+  "otvoreni": "https://stream2.otvoreni.hr/otvoreni",
+  "bravo_rock": "http://c5.hostingcentar.com:8348/stream",
+  "extra_fm": "http://streams.extrafm.hr:8110/stream",
+  "bravo": "http://c5.hostingcentar.com:8059/stream"
 }
