@@ -1,10 +1,23 @@
 {
+  "alt90s": "https://listen.181fm.com/181-90salt_128k.mp3",
+  "antena": "http://live.antenazagreb.hr:8000/stream",
+  "big90s": "https://stream.zeno.fm/qmqe8k5e74zuv",
+  "bravo": "http://c5.hostingcentar.com:8059/stream",
+  "bravo_rock": "http://c5.hostingcentar.com:8348/stream",
+  "buzz": "https://listen.181fm.com/181-buzz_128k.mp3",
+  "enter": "http://live.enterzagreb.hr:8023/stream",
+  "extra_fm": "http://streams.extrafm.hr:8110/stream",
+  "hardnheavy": "https://audio.serv.pt/8040/stream",
+  "hkr": "http://stream.hkr.hr:8000/hkr.mp3",
+  "laganini": "http://194.145.208.251:8000/start",
+  "maria": "https://dreamsiteradiocp2.com/proxy/rmcroatia?mp=/stream",
+  "naxi90s": "https://naxidigital-90s128ssl.streaming.rs:8282/",
+  "naxiexyu": "https://naxidigital-exyu128ssl.streaming.rs:8242",
+  "naxifresh": "https://naxidigital-fresh128ssl.streaming.rs:8212",
+  "naximill": "https://naxidigital-millennium128ssl.streaming.rs:8342/",
+  "otvoreni": "https://stream2.otvoreni.hr/otvoreni",
   "radio101": "https://c2.hostingcentar.com/streams/radio101/",
   "radio101rock": "https://c2.hostingcentar.com/streams/radio101rock/",
-  "laganini": "http://194.145.208.251:8000/start",
   "top": "https://c5.hostingcentar.com/streams/topradio/",
-  "otvoreni": "https://stream2.otvoreni.hr/otvoreni",
-  "bravo_rock": "http://c5.hostingcentar.com:8348/stream",
-  "extra_fm": "http://streams.extrafm.hr:8110/stream",
-  "bravo": "http://c5.hostingcentar.com:8059/stream"
+  "yammat": "https://stream.yammat.fm/radio/8000/yammat.mp3"
 }

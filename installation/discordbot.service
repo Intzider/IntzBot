@@ -1,0 +1,9 @@
+[Unit]
+Description=Discord radio bot
+
+[Service]
+ExecStart=/opt/IntzBot/discordbot/bin/python3.10 /opt/IntzBot/bot.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
