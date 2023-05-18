@@ -31,11 +31,7 @@ class EventsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if isinstance(error, CommandNotFound):
-            logger.error("CommandNotFound")
-            return
-        logger.error("CommandNotFound - not instance")
-        raise error
+        logger.error(repr(error))
 
 
 async def setup(bot):

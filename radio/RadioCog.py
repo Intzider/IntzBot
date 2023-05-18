@@ -1,15 +1,15 @@
 import asyncio
+from datetime import datetime
+from time import time
 import json
 import logging
 import os
-from time import time
 from urllib.request import urlopen
 
 from discord import FFmpegOpusAudio, Embed
 from discord.ext import commands
 from shazamio import Shazam
 
-SHAZAM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "file.mp3")
 STREAMS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "streams.json")
 
 logger = logging.getLogger('discord')
@@ -28,19 +28,20 @@ class RadioCog(commands.Cog):
             return json.load(file)
 
     @staticmethod
+    def shazam_file(guild_id):
+        filename = f"file{guild_id}{datetime.now().strftime('%m%d%Y%H%M%S')}.mp3"
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+
+    @staticmethod
     def add_streams(data: dict):
         with open(STREAMS, "w+") as file:
             file.write(json.dumps(data, sort_keys=True, indent=2))
 
     @staticmethod
     async def get_user_channel(ctx):
-        if ctx.author.voice is None:
-            await ctx.send("You're not in a voice channel")
-            return None
-        if ctx.author.voice.channel is None:
-            await ctx.send("You're not in a voice channel")
-            return None
-        return ctx.author.voice.channel
+        if ctx.author.voice is not None:
+            return ctx.author.voice.channel
+        await ctx.send("You're not in a voice channel")
 
     async def verify_station(self, ctx, args):
         if len(args) != 1:
@@ -49,48 +50,38 @@ class RadioCog(commands.Cog):
                             value="\n".join([f"`{os.getenv('PREFIX')}play {x}`" for x, _ in self.bot.streams.items()]),
                             inline=False)
             await ctx.send(embed=embed)
-            return None
+            return
 
-        if ctx.guild.voice_client is not None:
-            if self.bot.streams.get(args[0], "") == ctx.guild.voice_client.endpoint:
-                await ctx.send("This is already playing")
-                return None
-
-        station = self.bot.streams.get(args[0], None)
-        if station is None:
+        if (station := self.bot.streams.get(args[0], None)) is None:
             await ctx.send("You mistyped, I ain't playin nuffin")
-            return None
-
+        else:
+            if station == self.bot.playing.get(ctx.guild.id, None):
+                await ctx.send("This is already playing")
+                return
         return station
 
     @commands.guild_only()
     @commands.command(name="play")
     async def play(self, ctx, *args):
-        def play_audio(err=None):
-            if err is not None:
-                logger.error(f"play_audio {err}")
-            if not voice.is_connected():
-                return
+        async def play_audio():
+            source = await FFmpegOpusAudio.from_probe(change, method='fallback')
+            voice.play(source, after=lambda e: logger.error("It hath stopped: " + repr(e)))
+
             self.bot.playing[ctx.guild.id] = change
-            source = FFmpegOpusAudio(change, options="-filter:a volume=0.2 -y")
-            voice.play(source, after=lambda e: play_audio(e))
+            logger.info(f"{ctx.guild.name} | {ctx.author.name} | {args[0]}")
 
-        voice_channel = await self.get_user_channel(ctx)
-        voice = ctx.guild.voice_client
-        change = await self.verify_station(ctx, args)
-
-        if voice_channel is not None and change is not None:
-            if voice is not None:
-                if change is not None:
-                    voice.pause()
-                else:
-                    return
-
+        if (voice_channel := await self.get_user_channel(ctx)) is not None \
+                and (change := await self.verify_station(ctx, args)) is not None:
+            voice = ctx.guild.voice_client
             if voice is None:
                 voice = await voice_channel.connect()
-            elif voice.channel != voice_channel:
-                voice.move_to(voice_channel)
-            play_audio()
+            else:
+                await self.stop(ctx)
+                if voice.channel != voice_channel:
+                    voice.move_to(voice_channel)
+
+            if voice.is_connected():
+                await play_audio()
 
     @commands.guild_only()
     @commands.command("shazam")
@@ -99,11 +90,10 @@ class RadioCog(commands.Cog):
             source = self.bot.playing[ctx.guild.id]
             response = urlopen(source, timeout=limit + 1.0)
 
-            with open(SHAZAM, "wb") as file:
-                block_size = 1024
+            with open(filename, "wb") as file:
                 while time() - start < limit:
                     try:
-                        audio = response.read(block_size)
+                        audio = response.read(1024)
                         if not audio:
                             return
                         file.write(audio)
@@ -137,10 +127,14 @@ class RadioCog(commands.Cog):
             await ctx.send("Bot not playing")
             return
 
-        message = await ctx.send("Listening")
-        start = time()
+        if await self.get_user_channel(ctx) is None:
+            return
 
+        start = time()
         recording_error = False
+        filename = self.shazam_file(ctx.guild.id)
+        message = await ctx.send("Listening")
+
         loop = asyncio.get_event_loop()
         await asyncio.gather(*[loop.create_task(message_loading()), loop.create_task(record())])
 
@@ -149,12 +143,13 @@ class RadioCog(commands.Cog):
             await message.edit(content="Recording error... ;_;")
             return
 
-        shazam_output = await Shazam().recognize_song(SHAZAM)
+        shazam_output = await Shazam().recognize_song(filename)
         try:
             track = shazam_output["track"]["share"]["subject"]
             await message.edit(content=track)
         except KeyError:
             await message.edit(content="Nothing? Well... This is awkward... Try Again? heh")
+        os.remove(filename)
 
     @commands.guild_only()
     @commands.command(name="dc")
@@ -187,7 +182,6 @@ class RadioCog(commands.Cog):
         voice = ctx.guild.voice_client
         if voice is not None:
             voice.stop()
-            await self.disconnect(ctx)
 
     @commands.is_owner()
     @commands.command(name="add_stream")
