@@ -1,7 +1,6 @@
 import logging
 
 from discord.ext import commands
-from discord.ext.commands import CommandNotFound
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.ERROR)

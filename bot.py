@@ -16,19 +16,16 @@ bot = commands.Bot(intents=Intents().all(),
 class CustomHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         embed = Embed(title="Available commands:")
-        embed.add_field(name=f"`{os.getenv('PREFIX')}play`",
-                        value=f"list stations",
-                        inline=False)
-        embed.add_field(name=f"`{os.getenv('PREFIX')}play [station]`",
+        embed.add_field(name=f"`/radio [station]`",
                         value="change current station / connect to voice channel",
                         inline=False)
-        embed.add_field(name=f"`{os.getenv('PREFIX')}dc`",
+        embed.add_field(name=f"`/disconnect`",
                         value="stop playing and disconnect from voice channel",
                         inline=False)
-        embed.add_field(name=f"`{os.getenv('PREFIX')}shazam`",
+        embed.add_field(name=f"`/shazam`",
                         value="identify current song (defaults to 10s)",
                         inline=False)
-        embed.add_field(name=f"`{os.getenv('PREFIX')}shazam [duration]`",
+        embed.add_field(name=f"`/shazam [duration]`",
                         value="identify current song with [duration] seconds of listening (between 10 and 20)",
                         inline=False)
         channel = self.get_destination()
