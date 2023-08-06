@@ -1,0 +1,2 @@
+playing = dict()
+channels = dict()

@@ -5,6 +5,7 @@ import json
 import logging
 import os
 from urllib.request import urlopen
+from .playing import playing, channels
 
 import discord
 from discord import FFmpegOpusAudio, app_commands, Interaction
@@ -27,13 +28,14 @@ class RadioCog(commands.Cog):
         super().__init__()
         self.bot = bot
         self.streams = get_streams()
-        self.playing = dict()
 
     @commands.is_owner()
     @commands.command()
     async def sync(self, ctx) -> None:
         logger.info("syncing...")
-        syncom = await self.bot.tree.sync()
+        # self.bot.tree.copy_global_to(guild=discord.Object(id=ID))
+        syncom = await self.bot.tree.sync()  # guild=discord.Object(id=ID)
+        logger.info(syncom)
         logger.info(f"synced {len(syncom)} commands: {', '.join([x.name for x in syncom])}")
 
     @staticmethod
@@ -55,26 +57,25 @@ class RadioCog(commands.Cog):
     @app_commands.guild_only()
     @app_commands.command(name="radio", description="Play radio stream")
     @app_commands.describe(stream="Stream to play")
-    @app_commands.choices(stream=[
-        discord.app_commands.Choice(name=x, value=v) for x, v in get_streams().items()
-    ])
+    @app_commands.choices(stream=[discord.app_commands.Choice(name=x, value=v) for x, v in get_streams().items()])
     async def radio(self, i: Interaction, stream: app_commands.Choice[str]):
         async def play_audio():
             await i.response.send_message(f"Started playing {stream.name}")
             source = await FFmpegOpusAudio.from_probe(stream.value, method='fallback')
             voice.play(source, after=lambda e: logger.error("It hath stopped: " + repr(e)))
 
-            self.playing[i.guild.id] = stream.value
+            playing[i.guild.id] = stream.value
             logger.info(f"{i.guild.name} | {i.user.name} | {stream.name}")
 
         if (voice_channel := await self.get_user_channel(i)) is not None:
             voice = i.guild.voice_client
             if voice is None:
                 voice = await voice_channel.connect()
+                channels[i.guild.id] = voice_channel
             else:
                 await self.stop(i)
-                if voice.channel != voice_channel:
-                    voice.move_to(voice_channel)
+                if voice.channel.name != voice_channel.name:
+                    await voice.move_to(voice_channel)
 
             if voice.is_connected():
                 await play_audio()
@@ -85,7 +86,7 @@ class RadioCog(commands.Cog):
     @app_commands.describe(duration="Optional parameter, defaults to 10s (can be between 10 and 20)")
     async def shazam(self, i: Interaction, duration: float = 10.0):
         async def record():
-            source = self.playing[i.guild.id]
+            source = playing[i.guild.id]
             response = urlopen(source, timeout=limit + 1.0)
 
             with open(filename, "wb") as file:
@@ -153,7 +154,8 @@ class RadioCog(commands.Cog):
             await i.response.send_message("Not connected")
             return
         if voice_state.is_playing():
-            del self.playing[i.guild.id]
+            del playing[i.guild.id]
+            del channels[i.guild.id]
 
         await voice_state.disconnect(force=False)
         voice_state.cleanup()
@@ -161,7 +163,7 @@ class RadioCog(commands.Cog):
 
     async def stop(self, i: Interaction):
         try:
-            del self.playing[i.guild.id]
+            del playing[i.guild.id]
         except KeyError:
             await i.response.send_message("Not playing anything")
             return
