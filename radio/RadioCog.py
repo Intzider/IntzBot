@@ -148,6 +148,7 @@ class RadioCog(commands.Cog):
     @app_commands.guild_only()
     @app_commands.command(name="disconnect", description="Disconnect bot from voice channel")
     async def disconnect(self, i: Interaction):
+        logger.info(f'disconnected by: {i.user.name}')
         voice_state = i.guild.voice_client
         if voice_state is None:
             await i.response.send_message("Not connected")

@@ -7,13 +7,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-bot = commands.Bot(intents=Intents().all(),
-                   owner_id=270319757167689728,
-                   command_prefix=os.getenv('PREFIX'),
-                   help_command=None)
-
 
 class CustomHelp(commands.HelpCommand):
+    def __init__(self):
+        super().__init__()
+
     async def send_bot_help(self, mapping):
         embed = Embed(title="Available commands:")
         embed.add_field(name=f"`/radio [station]`",
@@ -30,6 +28,12 @@ class CustomHelp(commands.HelpCommand):
                         inline=False)
         channel = self.get_destination()
         await channel.send(embed=embed)
+
+
+bot = commands.Bot(intents=Intents().all(),
+                   owner_id=270319757167689728,
+                   command_prefix=os.getenv('PREFIX'),
+                   help_command=CustomHelp())
 
 
 async def load_cogs():
