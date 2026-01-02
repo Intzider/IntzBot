@@ -7,7 +7,7 @@ import os
 from urllib.request import urlopen
 
 import discord
-from discord import FFmpegOpusAudio, app_commands, Interaction
+from discord import FFmpegPCMAudio, app_commands, Interaction
 from discord.ext import commands
 from shazamio import Shazam
 
@@ -61,8 +61,23 @@ class RadioCog(commands.Cog):
     async def radio(self, i: Interaction, stream: app_commands.Choice[str]):
         async def play_audio():
             await i.response.send_message(f"Started playing {stream.name}")
-            source = await FFmpegOpusAudio.from_probe(stream.value, method='fallback')
-            voice.play(source, after=lambda e: logger.error("It hath stopped: " + repr(e)))
+            source = discord.FFmpegPCMAudio(
+                stream.value,
+                before_options=(
+                    "-loglevel error "
+                    "-reconnect 1 "
+                    "-reconnect_streamed 1 "
+                    "-reconnect_delay_max 5"
+                ),
+                options=(
+                    "-vn "
+                    "-ac 2 "
+                    "-ar 48000 "
+                    "-f s16le"
+                ),
+            )
+
+            voice.play(source, after=lambda e: logger.error(f"It hath stopped: {e!r}") if e else None)
 
             self.playing[i.guild.id] = stream.value
             logger.info(f"{i.guild.name} | {i.user.name} | {stream.name}")
