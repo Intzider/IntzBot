@@ -1,0 +1,7 @@
+.env
+.env.*
+.git
+.idea
+__pycache__
+venv
+installation
