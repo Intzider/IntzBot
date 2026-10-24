@@ -14,3 +14,15 @@ Available commands:
 * default prefix for non-slash commands set to `:`, can be changed in `.env` file (requires service restart)
 * installation script located in `installation` folder
 * there are other commands available but are set to `owner` which is hardcoded in `bot.py` (change requires service restart)
+
+### Docker
+* `Dockerfile` expects the build context to be the folder containing this repo cloned as `IntzBot/`:
+    ```
+    discord-bot/
+    └── IntzBot/   <- this repo (with .env)
+    ```
+* compose service: `build: { context: ./discord-bot, dockerfile: IntzBot/Dockerfile }`
+  (or copy the `Dockerfile` to `discord-bot/Dockerfile` and keep `context: ./discord-bot`)
+* `.env` is passed through `env_file`, it is not copied into the image
+* streams are stored in `/data/streams.json` (seeded from `radio/streams.json` on first start), mount `/data` to keep them
+* run `:sync` after first start or when slash commands change

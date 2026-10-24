@@ -18,7 +18,6 @@ sed -i "s/some_token/$1/g" /opt/IntzBot/.env &&
 python3 -m venv /opt/IntzBot/discordbot &&
 source /opt/IntzBot/discordbot/bin/activate &&
 pip3 install -r /opt/IntzBot/requirements.txt &&
-pip3 install ffmpeg-python &&
 deactivate &&
 
 cp /opt/IntzBot/installation/discordbot.service /etc/systemd/system/ &&

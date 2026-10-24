@@ -1,4 +1,3 @@
-import asyncio
 import os
 
 from discord import Intents, Embed
@@ -30,17 +29,18 @@ class CustomHelp(commands.HelpCommand):
         await channel.send(embed=embed)
 
 
-bot = commands.Bot(intents=Intents().all(),
-                   owner_id=270319757167689728,
-                   command_prefix=os.getenv('PREFIX'),
-                   help_command=CustomHelp())
+class RadioBot(commands.Bot):
+    async def setup_hook(self):
+        await self.load_extension("radio.RadioCog")
+        await self.load_extension("radio.EventsCog")
 
 
-async def load_cogs():
-    await bot.load_extension("radio.RadioCog")
-    await bot.load_extension("radio.EventsCog")
+intents = Intents.default()
+intents.message_content = True  # needed for prefix (owner) commands
 
+bot = RadioBot(intents=intents,
+               owner_id=270319757167689728,
+               command_prefix=os.getenv('PREFIX'),
+               help_command=CustomHelp())
 
-asyncio.run(load_cogs())
-bot.help_command = CustomHelp()
 bot.run(os.getenv('TOKEN'))
