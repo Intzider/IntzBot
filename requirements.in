@@ -1,0 +1,5 @@
+# [voice] pulls in PyNaCl and davey (DAVE voice encryption)
+discord.py[voice]
+shazamio
+python-dotenv
+aiohttp

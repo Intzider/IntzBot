@@ -20,3 +20,14 @@ Available commands:
 * `.env` is passed through `env_file`, it is not copied into the image
 * streams are stored in `/data/streams.json` (seeded from `radio/streams.json` on first start), mount `/data` to keep them
 * run `:sync` after first start or when slash commands change
+
+### Dependencies
+Direct dependencies go in `requirements.in`; `requirements.txt` is generated with hashes (use Python 3.12, same as the image):
+
+```sh
+pip install pip-tools
+pip-compile --generate-hashes --strip-extras requirements.in            # after editing requirements.in
+pip-compile --generate-hashes --strip-extras --upgrade requirements.in  # upgrade everything
+```
+
+Dependabot opens a weekly PR that does the upgrade for you (plus the Docker base image). CI builds the image and checks that ffmpeg and all modules import, so a green PR is safe to merge.
