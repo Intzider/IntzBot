@@ -16,13 +16,7 @@ Available commands:
 * there are other commands available but are set to `owner` which is hardcoded in `bot.py` (change requires service restart)
 
 ### Docker
-* `Dockerfile` expects the build context to be the folder containing this repo cloned as `IntzBot/`:
-    ```
-    discord-bot/
-    └── IntzBot/   <- this repo (with .env)
-    ```
-* compose service: `build: { context: ./discord-bot, dockerfile: IntzBot/Dockerfile }`
-  (or copy the `Dockerfile` to `discord-bot/Dockerfile` and keep `context: ./discord-bot`)
+* compose service: `build: { context: ./discord-bot/IntzBot }` (build context is the repo root)
 * `.env` is passed through `env_file`, it is not copied into the image
 * streams are stored in `/data/streams.json` (seeded from `radio/streams.json` on first start), mount `/data` to keep them
 * run `:sync` after first start or when slash commands change

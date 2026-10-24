@@ -1,5 +1,3 @@
-# Build context is the parent folder that holds this repo as IntzBot/
-# (compose: `context: ./discord-bot`), so paths below are prefixed with IntzBot/.
 FROM python:3.12-slim
 
 RUN apt-get update \
@@ -13,12 +11,12 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY IntzBot/requirements.txt .
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # copy only the code; .env is passed in at runtime through env_file
-COPY IntzBot/bot.py .
-COPY IntzBot/radio/ radio/
+COPY bot.py .
+COPY radio/ radio/
 
 VOLUME /data
 
