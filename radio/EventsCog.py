@@ -4,7 +4,6 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 
 logger = logging.getLogger('discord')
-logger.setLevel(logging.ERROR)
 
 
 class EventsCog(commands.Cog):

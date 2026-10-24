@@ -17,7 +17,6 @@ STREAMS = os.getenv("STREAMS_FILE", DEFAULT_STREAMS)
 MAX_CHOICES = 25  # Discord limit for autocomplete results
 
 logger = logging.getLogger('discord')
-logger.setLevel(logging.ERROR)
 
 
 def get_streams() -> dict:
